@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 
 #include "Box.hpp"
 #include "Sphere.hpp"
@@ -24,13 +25,17 @@ const double FPS = 60.0;
 const double dt = 1.0 / FPS;
 
 bool firstMouse = true;
+bool mouseButtonHeld = false;
 float yaw = -90.0f;
 float pitch = 0.0f;
-float lastX = WIDTH / 2.0;
-float lastY = HEIGHT / 2.0;
+double lastX = WIDTH / 2.0;
+double lastY = HEIGHT / 2.0;
 float fov = 90.0f;
 
+
+
 std::vector<Sphere> spheres;
+GLUquadric* quadric = nullptr; // Made a global quadric so I don't have to create an individual one for every sphere
 
 glm::vec3 cameraPos = glm::vec3(7.0f, 7.0f, 13.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -52,51 +57,60 @@ void processInput(GLFWwindow* window) {
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse) {
+
+void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            mouseButtonHeld = true;
+            glfwGetCursorPos(window, &lastX, &lastY);
+        } else if (action == GLFW_RELEASE) {
+            mouseButtonHeld = false;
+            firstMouse = true;
+        }
+    }
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (mouseButtonHeld) {
+        if (firstMouse) {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-        firstMouse = false;
+
+        float sensitivity = 0.3f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw += xoffset;
+        pitch += yoffset;
+
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        cameraFront = glm::normalize(direction);
     }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
 }
 
 void renderSphere(const Sphere& sphere) {
     glPushMatrix();
     
     glTranslatef(sphere.getX(), sphere.getY(), sphere.getZ());
-    GLUquadric* quadric = gluNewQuadric();
-    gluQuadricDrawStyle(quadric, GLU_FILL);
-    gluQuadricNormals(quadric, GLU_SMOOTH);
     gluSphere(quadric, sphere.getRadius(), 32, 32);
-    gluDeleteQuadric(quadric);
     
     glPopMatrix();
 }
-
-
 
 void renderBox(const Box& box) {
     
@@ -199,6 +213,11 @@ int main() {
         return -1;
     }
     
+    // Quadric creation:
+    
+    quadric = gluNewQuadric();
+    gluQuadricDrawStyle(quadric, GLU_FILL);
+    gluQuadricNormals(quadric, GLU_SMOOTH);
     
     // Box and Spheres construction:
     
@@ -283,8 +302,10 @@ int main() {
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
     
+    int totalFrames = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+
     while (!glfwWindowShouldClose(window)) {
-        
         processInput(window);
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -301,9 +322,8 @@ int main() {
                   cameraPos.z + cameraFront.z,
                   cameraUp.x, cameraUp.y, cameraUp.z);
         
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        
-        glfwSetCursorPosCallback(window, mouse_callback);
+        glfwSetMouseButtonCallback(window, mouse_callback);
+        glfwSetCursorPosCallback(window, cursor_position_callback);
         
         renderBox(box);
         
@@ -341,9 +361,20 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
         
+        totalFrames++;
+
     }
     
-    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    double totalTimeMs = duration.count();
+
+    double averageFrameTime = totalTimeMs / totalFrames;
+    std::cout << "Total frames: " << totalFrames << std::endl;
+    std::cout << "Total time: " << totalTimeMs << " milliseconds" << std::endl;
+    std::cout << "Average frame time: " << averageFrameTime << " milliseconds" << std::endl;
+
+    gluDeleteQuadric(quadric);
     glfwTerminate();
     return 0;
 }
