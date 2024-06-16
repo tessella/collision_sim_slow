@@ -18,3 +18,4 @@ device. If your computer is beefier feel free to explore this limit yourself.
 - [ ] Clean up memory allocation to use the same GLUquadric for all spheres.
 - [ ] Use fixed-size array instead of vector.
 - [ ] (greedy) For case of 1 sphere, implement trajectory trail and impact site tagging.
+- [ ] Add a GUI that allows you to stop/start the simulation and change the following parameters: gravity, restitution, amount of spheres and bounding shape.
