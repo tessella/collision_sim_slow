@@ -11,3 +11,10 @@ making this code run smoother, I'll create a new project from the original.
 For these reasons, the upper limit on the amount of spheres my laptop (M1 Macbook Air, 16gb RAM) can render and 
 simulate comfortably are around 400. Anything more will cause the simulation to slow down considerably on my 
 device. If your computer is beefier feel free to explore this limit yourself.
+
+# Future work
+- [ ] Add Octree optimisation for spatial partinioning.
+- [ ] Incorporat either Separating Axis Theorem or Gilbert-Johnson-Keerthi for sphere collisions.
+- [ ] Clean up memory allocation to use the same GLUquadric for all spheres.
+- [ ] Use fixed-size array instead of vector.
+- [ ] (greedy) For case of 1 sphere, implement trajectory trail and impact site tagging.
