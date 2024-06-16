@@ -1,3 +1,6 @@
+# Slow Collision Simulation
+
+
 This project explores a straightforward collision simulation of several spheres bounded in a box. 
 It does not implement any fancy optimisations like Octree (for calculating which spheres are colliding 
 with the target sohere, and not have to run through every single sphere in the sim), or SAT/GJK algorithm. 
