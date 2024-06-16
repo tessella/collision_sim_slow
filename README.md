@@ -14,8 +14,8 @@ device. If your computer is beefier feel free to explore this limit yourself.
 
 # Future work
 - [ ] Add Octree optimisation for spatial partinioning.
-- [ ] Incorporat either Separating Axis Theorem or Gilbert-Johnson-Keerthi for sphere collisions.
+- [ ] Incorporate either Separating Axis Theorem or Gilbert-Johnson-Keerthi for sphere collisions.
 - [ ] Clean up memory allocation to use the same GLUquadric for all spheres.
 - [ ] Use fixed-size array instead of vector.
-- [ ] (greedy) For case of 1 sphere, implement trajectory trail and impact site tagging.
+- [ ] (greedy) For case of 1 sphere, implement trajectory trail and impact sites.
 - [ ] Add a GUI that allows you to stop/start the simulation and change the following parameters: gravity, restitution, amount of spheres and bounding shape.
